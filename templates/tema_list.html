@@ -1,0 +1,21 @@
+<!-- templates/temas/Tema_list.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Temas</title>
+</head>
+<body>
+    <h1>Temas</h1>
+    <ul>
+        {% for tema in Temas %}
+            <li>
+                <a href="{% url 'tema-detail' tema.pk %}">
+                    {{ tema.titulo }}
+                </a> - 
+            </li>
+        {% empty %}
+            <li>No hay temas disponibles.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
