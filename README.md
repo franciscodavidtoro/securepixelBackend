@@ -1,6 +1,4 @@
-# Proyecto Django - Sistema de Temas
 
-Este proyecto es una aplicación web desarrollada con Django que permite crear, editar y visualizar temas educativos con contenido en formato Markdown. El sistema incluye una interfaz de administración para gestionar los temas, y una interfaz pública para mostrar el contenido formateado.
 
 ## 🔧 Requisitos
 
@@ -84,16 +82,3 @@ http://127.0.0.1:8000/admin/
 ```
 
 ---
-
-## 📝 Características
-
-- Gestión de temas con campos: título, dificultad mínima y máxima, y contenido en Markdown.
-- Renderizado del contenido Markdown a HTML.
-- CRUD de temas desde el panel de administración de Django.
-- Visualización pública de temas en la interfaz web.
-
----
-
-## 📄 Licencia
-
-Este proyecto se distribuye bajo la licencia MIT.
