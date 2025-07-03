@@ -14,14 +14,14 @@
 
 **Linux/macOS:**
 ```bash
-python3 -m venv env
-source env/bin/activate
+python3 -m venv .env
+source .env/bin/activate
 ```
 
 **Windows (CMD):**
 ```cmd
-python -m venv env
-env\Scripts\activate
+python -m venv .env
+.env\Scripts\activate
 ```
 
 ---
