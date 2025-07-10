@@ -4,6 +4,8 @@
 from django.db import models
 from markdownx.models import MarkdownxField
 from markdownx.utils import markdownify
+from inicioSesion.models import Usuario
+
 class Tema(models.Model):
     titulo = models.CharField(max_length=200)
     dificultadMinima = models.IntegerField()
@@ -16,4 +18,6 @@ class Tema(models.Model):
     
     def formatted_markdown(self):
         return markdownify(self.contenido)
+
+    
     

@@ -17,3 +17,5 @@ admin.site.register(pregunta,andminPreguntas)
 
 
 admin.site.register(subirImg)  
+
+

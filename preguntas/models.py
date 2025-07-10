@@ -3,6 +3,7 @@ from markdownx.models import MarkdownxField
 from markdownx.utils import markdownify
 # Create your models here.
 from ensennanza.models import Tema
+from inicioSesion.models import Usuario
 
 class subirImg(models.Model):
     
@@ -28,3 +29,13 @@ class respuesta(models.Model):
     IA=models.BooleanField(default=False)
     def __str__(self):
         return markdownify(self.texto)
+
+
+class Prueba(models.Model):
+    titulo = models.CharField(max_length=100)
+    descripcion = MarkdownxField()
+    temas = models.ManyToManyField(Tema, blank=True)
+    estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
+    realizada = models.BooleanField(default=False)
+    calificacion = models.FloatField(default=0.0)
+    
