@@ -33,7 +33,6 @@ class respuesta(models.Model):
 
 class Prueba(models.Model):
     titulo = models.CharField(max_length=100)
-    descripcion = MarkdownxField()
     temas = models.ManyToManyField(Tema, blank=True)
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
     realizada = models.BooleanField(default=False)
