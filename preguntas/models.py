@@ -33,7 +33,7 @@ class respuesta(models.Model):
 
 class Prueba(models.Model):
     titulo = models.CharField(max_length=100)
-    temas = models.ManyToManyField(Tema, blank=True)
+    temas = models.ForeignKey(Tema, on_delete=models.CASCADE, null=True, blank=True)
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
     realizada = models.BooleanField(default=False)
     calificacion = models.FloatField(default=0.0)
