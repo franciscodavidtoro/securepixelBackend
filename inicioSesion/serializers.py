@@ -13,10 +13,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user = Usuario.objects.create_user(**validated_data)
         return user
     
-    def update(self, instance, validated_data):
+    def update(self, instance: Usuario, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
         instance.tipo_usuario = validated_data.get('tipo_usuario', instance.tipo_usuario)
+        if instance.tipo_usuario == 'administrador':
+
         instance.save()
         return instance
     

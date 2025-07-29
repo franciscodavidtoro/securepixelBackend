@@ -5,6 +5,7 @@ from django.db import models
 class Usuario(AbstractUser):
     TIPOS_USUARIO = [
         ('alumno', 'Alumno'),
+        ('profesor', 'Profesor'),
         ('administrador', 'Administrador'),
     ]
     
