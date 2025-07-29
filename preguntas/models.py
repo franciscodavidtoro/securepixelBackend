@@ -14,27 +14,28 @@ class subirImg(models.Model):
     
 class pregunta(models.Model):
     temaCorespondiente = models.ForeignKey(Tema, on_delete=models.CASCADE, null=True, blank=True, default=None)
-    IA = models.BooleanField(default=False)
-    IAPrompt=models.TextField( null=True, blank=True, default=None)
+    ia = models.BooleanField(default=False)
+    IAPrompt=models.TextField( null=True, blank=True, default="")
     texto = MarkdownxField()
+    
     
         
     def __str__(self):
-        markdownify(self.texto)
+        return self.temaCorespondiente.__str__()
     
 class respuesta(models.Model):
     preguntaCorespondiente=models.ForeignKey(pregunta, on_delete=models.CASCADE)
     texto=MarkdownxField()
     corecta= models.BooleanField(default=False)
-    IA=models.BooleanField(default=False)
+    ia=models.BooleanField(default=False)
     def __str__(self):
         return markdownify(self.texto)
 
 
 class Prueba(models.Model):
-    titulo = models.CharField(max_length=100)
     tema = models.ForeignKey(Tema, on_delete=models.CASCADE, null=True, blank=True)
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
     realizada = models.BooleanField(default=False)
     calificacion = models.FloatField(default=0.0)
+    repetible =models.BooleanField(default=False)
     
