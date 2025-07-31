@@ -1,16 +1,9 @@
 from django.shortcuts import render
 
 # app/views.py
-from django.views.generic.edit import CreateView
-from django.urls import reverse_lazy
-from django.contrib.auth.views import LoginView
+
 from .models import Usuario
-from .forms import RegistroUsuarioForm
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.forms import AuthenticationForm
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.urls import reverse_lazy
+
 
 
 from rest_framework.views import APIView
