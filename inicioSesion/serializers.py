@@ -17,6 +17,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
         instance.tipo_usuario = validated_data.get('tipo_usuario', instance.tipo_usuario)
+        
+    
+        
         if instance.tipo_usuario == 'administrador':
             instance.is_superuser == True
         else:
@@ -28,3 +31,33 @@ class UsuarioSerializer(serializers.ModelSerializer):
     def getUsuarios(self):
         usuarios = Usuario.objects.all()
         return [{'id': usuario.id, 'username': usuario.username, 'email': usuario.email, 'tipo_usuario': usuario.tipo_usuario} for usuario in usuarios]
+    
+    def getUsuariosProfesor(self, instance: Usuario):
+        # Obtener usuarios tipo 'alumno' cuyo curso tenga como profesor al 'instance'
+        alumnos = Usuario.objects.filter(
+            tipo_usuario='alumno',
+            curso__profesor=instance,
+        )
+
+        return [
+            {
+                'id': alumno.id,
+                'username': alumno.username,
+                'email': alumno.email,
+                'tipo_usuario': alumno.tipo_usuario
+            }
+            for alumno in alumnos
+        ]
+    
+    def update_admin_password(self, instance: Usuario, new_password: str):
+        if instance.tipo_usuario != 'administrador':
+            raise serializers.ValidationError("El usuario no es un administrador.")
+        instance.set_password(new_password)
+        instance.save()
+        return instance
+    
+    def update_user_password(self, instance: Usuario, new_password: str):
+        instance.set_password(new_password)
+        instance.save()
+        return instance
+
