@@ -18,7 +18,7 @@ class Usuario(AbstractUser):
         choices=TIPOS_USUARIO,
         default='alumno',
     )
-    Curso=models.ForeignKey(Curso,null=True,default=None,blank=True,
+    curso=models.ForeignKey(Curso,null=True,default=None,blank=True,
         on_delete=models.SET_NULL, related_name='alumnos' )
 
     def __str__(self):

@@ -43,4 +43,4 @@ class Prueba(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(10)]
     )
     repetible =models.BooleanField(default=False)
-    
+    fecha = models.DateTimeField(auto_now_add=True)
