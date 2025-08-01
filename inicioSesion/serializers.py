@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from .models import Usuario
 
+
     
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'password', 'email', 'tipo_usuario', 'curso']
+        fields = ['id', 'username', 'password','first_name','last_name', 'email', 'tipo_usuario']
         read_only_fields = ['id']
     
     def create(self, validated_data):
