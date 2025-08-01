@@ -4,6 +4,8 @@ from markdownx.utils import markdownify
 # Create your models here.
 from ensennanza.models import Tema
 from inicioSesion.models import Usuario
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 class subirImg(models.Model):
     
@@ -37,5 +39,8 @@ class Prueba(models.Model):
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
     realizada = models.BooleanField(default=False)
     calificacion = models.FloatField(default=0.0)
+    dificultad=models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
+    )
     repetible =models.BooleanField(default=False)
     
