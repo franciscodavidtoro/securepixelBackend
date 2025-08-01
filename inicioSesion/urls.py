@@ -6,7 +6,8 @@ from .views import (
     UsuarioListAPIView,
     UsuariosUpdateAPIView,
     UsuarioCambContrasennaAPIView,
-    LogoutAPIView
+    LogoutAPIView,
+    UsuarioActualAPIView
 )
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path('update', UsuariosUpdateAPIView.as_view(), name='usuarios-update'),
     path('cambiar-contrasena', UsuarioCambContrasennaAPIView.as_view(), name='usuarios-cambiar-contrasena'),
     path('logout', LogoutAPIView.as_view(), name='api-logout'),
+    path('yo', UsuarioActualAPIView.as_view(), name='usuario-actual')
 ]

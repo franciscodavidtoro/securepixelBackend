@@ -110,3 +110,13 @@ class LogoutAPIView(APIView):
     def post(self, request):
         request.user.auth_token.delete()  # Elimina el token
         return Response({'message': 'Sesión cerrada'}, status=status.HTTP_200_OK)
+    
+    
+    
+class UsuarioActualAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        usuario = request.user
+        serializer = UsuarioSerializer(usuario)
+        return Response(serializer.data)
