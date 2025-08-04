@@ -18,6 +18,7 @@ class emociones(models.Model):
     prueba=models.ForeignKey(Prueba, on_delete=models.CASCADE)
     emociones=models.JSONField()
     emocionPredominante=models.CharField(max_length=50)
+    numImgProsesadas= models.IntegerField(default=0)
     
     
     

@@ -40,7 +40,7 @@ class UsuarioListAPIView(APIView):
     def get(self, request, *args, **kwargs):
         usuario=request.user # type: Usuario
         
-        if usuario.tipo_usuario =="Administrador":
+        if usuario.tipo_usuario =="Administrador" or usuario.is_superuser:
             serializer = UsuarioSerializer()
             usuarios = serializer.getUsuarios()
             return Response(usuarios, status=status.HTTP_200_OK)
