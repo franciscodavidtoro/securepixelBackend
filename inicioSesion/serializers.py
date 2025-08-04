@@ -23,6 +23,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         
         if instance.tipo_usuario == 'administrador':
             instance.is_superuser == True
+            instance.is_staff = True
         else:
             instance.is_superuser == False
 
