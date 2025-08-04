@@ -85,7 +85,7 @@ class UsuarioCambContrasennaAPIView(APIView):
             return Response({'message': 'Contraseña actualizada correctamente.'})
 
         # Si no es el mismo usuario pero es Administrador, puede cambiar contraseñas de otros
-        if usuario_autenticado.tipo_usuario == "Administrador":
+        if usuario_autenticado.tipo_usuario == "Administrador" or usuario_autenticado.is_superuser:
             try:
                 usuario_objetivo = Usuario.objects.get(id=id_usuario_objetivo)
             except Usuario.DoesNotExist:
