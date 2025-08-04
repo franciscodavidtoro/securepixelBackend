@@ -24,7 +24,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/usuarios/', include('inicioSesion.urls')),
-    path('', include('ensennanza.urls')),
+    path('api/ensennanza', include('ensennanza.urls')),
     path('', include('preguntas.urls')),
     
     path('markdownx/', include('markdownx.urls')),
