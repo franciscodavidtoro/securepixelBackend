@@ -53,11 +53,11 @@ class UsuarioListAPIView(APIView):
 class UsuariosUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def put(self, request, id):
+    def put(self, request, pk):
         usuario_autenticado = request.user  # type: Usuario
 
         try:
-            usuario_objetivo = Usuario.objects.get(pk=id)
+            usuario_objetivo = Usuario.objects.get(pk=pk)
         except Usuario.DoesNotExist:
             return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -77,27 +77,27 @@ class UsuariosUpdateAPIView(APIView):
 class UsuarioCambContrasennaAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def put(self, request):
+    def put(self, request,pk):
         usuario_autenticado = request.user  # type: Usuario
         nueva_contrasena = request.data.get('nueva_contrasena')
-        id_usuario_objetivo = request.data.get('id')
+        id_usuario_objetivo =pk
 
         if not nueva_contrasena:
             return Response({'detail': 'Debe proporcionar una nueva contraseña.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Si no se especifica ID, se asume que el usuario quiere cambiar su propia contraseña
         if not id_usuario_objetivo:
-            id_usuario_objetivo = usuario_autenticado.id
+            id_usuario_objetivo = usuario_autenticado.pk
 
         # Verificamos si es el mismo usuario que quiere cambiar su propia contraseña
-        if usuario_autenticado.id == int(id_usuario_objetivo):
+        if usuario_autenticado.pk == int(id_usuario_objetivo):
             self.update_user_password(usuario_autenticado, nueva_contrasena)
             return Response({'message': 'Contraseña actualizada correctamente.'})
 
         # Si no es el mismo usuario pero es Administrador, puede cambiar contraseñas de otros
         if usuario_autenticado.tipo_usuario == "Administrador" or usuario_autenticado.is_superuser:
             try:
-                usuario_objetivo = Usuario.objects.get(id=id_usuario_objetivo)
+                usuario_objetivo = Usuario.objects.get(pk=id_usuario_objetivo)
             except Usuario.DoesNotExist:
                 return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
