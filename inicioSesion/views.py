@@ -53,18 +53,25 @@ class UsuarioListAPIView(APIView):
 class UsuariosUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def put(self, request):
-        usuario_autenticado = request.user # type: Usuario
-        if usuario_autenticado.id == id or usuario_autenticado.is_superuser:
-            serializer = UsuarioSerializer(usuario_autenticado, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'message': 'Usuario actualizado'})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-            
-        return Response({'detail': 'No tienes permiso para modificar este usuario.'}, status=status.HTTP_403_FORBIDDEN)
+    def put(self, request, id):
+        usuario_autenticado = request.user  # type: Usuario
 
+        try:
+            usuario_objetivo = Usuario.objects.get(pk=id)
+        except Usuario.DoesNotExist:
+            return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Permitir si es el mismo usuario o si es admin y superusuario
+        if usuario_autenticado.id != id and not (
+            usuario_autenticado.tipo_usuario == "Administrador" and usuario_autenticado.is_superuser
+        ):
+            return Response({'detail': 'No tienes permiso para modificar este usuario.'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = UsuarioSerializer(usuario_objetivo, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()  # Aquí se usa tu método update() personalizado
+            return Response({'message': 'Usuario actualizado correctamente'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         
 class UsuarioCambContrasennaAPIView(APIView):
