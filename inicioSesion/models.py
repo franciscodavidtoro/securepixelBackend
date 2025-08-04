@@ -31,14 +31,4 @@ class Usuario(AbstractUser):
         if self.tipo_usuario != 'alumno' and self.curso is not None:
             raise ValidationError({'Curso': 'Solo los alumnos pueden tener curso asignado.'})
 
-    def save(self, *args, **kwargs):
-        # Si es administrador, asegurarse que tenga permisos de superusuario y staff
-        
-        if self.is_superuser :
-            self.tipo_usuario = 'administrador'
-            self.is_staff = True
-        else:
-            # Opcional: asegurarse de que no tengan permisos si no son admin
-            self.is_superuser = False
-        super().save(*args, **kwargs)
     
