@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Prueba, pregunta, respuesta
 from .serializers import PruebaSerializer, PruebaConPreguntasSerializer
 from inicioSesion.models import Usuario
+from ensennanza.models import Tema
 import random
 
 
@@ -12,18 +13,37 @@ class CrearPruebaAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        
+        
+        
         tema_id = request.data.get("tema_id")
-        dificultad = request.data.get("dificultad")
-        repetible = request.data.get("repetible", False)
+         # Validación básica
+        if not tema_id:
+            return Response({"error": "tema_id es requerido."}, status=400)
 
-        # Validación básica
-        if not tema_id or dificultad is None:
-            return Response({"error": "tema_id y dificultad son requeridos."}, status=400)
+        try:
+            tema = Tema.objects.get(id=tema_id)
+            tema
+        except Tema.DoesNotExist:
+            return Response({"error": "Tema no encontrado."}, status=404)
+
+        # Buscar pruebas anteriores del usuario en este tema
+        pruebas_anteriores = Prueba.objects.filter(estudiante=request.user).order_by('-fecha') 
+
+        if not pruebas_anteriores.exists():
+            dificultad = tema.dificultad_minima
+        else:
+            ultima_prueba = pruebas_anteriores.first() # type: Prueba
+            if ultima_prueba.nota > 18:
+                dificultad = min(ultima_prueba.dificultad + 1, tema.curso.dificultadMaxima)
+            if ultima_prueba.nota < 14:
+                dificultad = max(ultima_prueba.dificultad - 1, tema.curso.dificultadMinima)
+            else:
+                dificultad = ultima_prueba.dificultad
 
         prueba = Prueba.objects.create(
             tema_id=tema_id,
             dificultad=dificultad,
-            repetible=repetible,
             estudiante=request.user
         )
 
@@ -55,7 +75,7 @@ class RealizarPruebaAPIView(APIView):
                 continue
 
         if total > 0:
-            nota_final = (calificacion / total) * 10
+            nota_final = (calificacion / total) * 20
         else:
             nota_final = 0
 
