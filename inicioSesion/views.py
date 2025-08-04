@@ -55,15 +55,18 @@ class UsuariosUpdateAPIView(APIView):
     
     def put(self, request):
         usuario_autenticado = request.user # type: Usuario
-        if usuario_autenticado.id != id and (usuario_autenticado.tipo_usuario != "Administrador" or not usuario_autenticado.is_superuser ):
-            return Response({'detail': 'No tienes permiso para modificar este usuario.'}, status=status.HTTP_403_FORBIDDEN)
-
-        serializer = UsuarioSerializer(usuario_autenticado, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Usuario actualizado'})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if usuario_autenticado.id == id or usuario_autenticado.is_superuser:
+            serializer = UsuarioSerializer(usuario_autenticado, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'Usuario actualizado'})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+            
+        return Response({'detail': 'No tienes permiso para modificar este usuario.'}, status=status.HTTP_403_FORBIDDEN)
+
+        
+        
 class UsuarioCambContrasennaAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
