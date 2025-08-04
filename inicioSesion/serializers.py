@@ -7,8 +7,8 @@ from .models import Usuario
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'password','first_name','last_name', 'email', 'tipo_usuario', 'curso']
-        read_only_fields = ['id']
+        fields = ['id', 'username', 'password','first_name','last_name', 'email', 'tipo_usuario', 'curso', 'is_superuser']
+        read_only_fields = ['id', 'is_superuser']
     
     def create(self, validated_data):
         user = Usuario.objects.create_user(**validated_data)

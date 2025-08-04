@@ -55,7 +55,6 @@ class UsuariosUpdateAPIView(APIView):
     
     def put(self, request):
         usuario_autenticado = request.user # type: Usuario
-
         if usuario_autenticado.id != id and usuario_autenticado.tipo_usuario != "Administrador":
             return Response({'detail': 'No tienes permiso para modificar este usuario.'}, status=status.HTTP_403_FORBIDDEN)
 
