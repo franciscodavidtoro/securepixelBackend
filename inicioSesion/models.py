@@ -33,8 +33,9 @@ class Usuario(AbstractUser):
 
     def save(self, *args, **kwargs):
         # Si es administrador, asegurarse que tenga permisos de superusuario y staff
-        if self.tipo_usuario == 'administrador':
-            self.is_superuser = True
+        
+        if self.is_superuser :
+            self.tipo_usuario = 'administrador'
             self.is_staff = True
         else:
             # Opcional: asegurarse de que no tengan permisos si no son admin
