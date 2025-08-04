@@ -11,7 +11,9 @@ class EmocionesSerializer(serializers.ModelSerializer):
     class Meta:
         model = emociones
         fields = '__all__'
-        read_only_fields = ['prueba', 'emociones', 'numImgProsesadas']
+        read_only_fields = ['prueba', 'emociones','emocionPredominante', 'numImgProsesadas']
+  
+        
     
     
     

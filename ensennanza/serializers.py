@@ -7,8 +7,12 @@ class CursoSerializers(serializers.ModelSerializer):
         fields = '__all__'
         
 class TemaSerializers(serializers.ModelSerializer):
+    contenido_formateado = serializers.SerializerMethodField()
     class Meta:
         model = Tema
-        fields = '__all__'
+        fields = ['id', 'titulo', 'contenido', 'curso', 'orden', 'contenido_formateado']
+
+    def get_contenido_formateado(self, obj):
+        return obj.formatted_markdown()
         
     
