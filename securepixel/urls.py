@@ -25,7 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/usuarios/', include('inicioSesion.urls')),
     path('api/ensennanza/', include('ensennanza.urls')),
-    path('', include('preguntas.urls')),
+    path('api/preguntas/', include('preguntas.urls')),
     
     path('markdownx/', include('markdownx.urls')),
     
