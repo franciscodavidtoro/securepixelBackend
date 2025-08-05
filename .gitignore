@@ -164,3 +164,4 @@ cython_debug/
 #imagenes de media
 media
 dbMod.sqlite3
+db - copia.sqlite3
