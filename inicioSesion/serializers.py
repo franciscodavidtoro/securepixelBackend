@@ -15,10 +15,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
     
     def update(self, instance: Usuario, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.tipo_usuario = validated_data.get('tipo_usuario', instance.tipo_usuario)
-        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
     
         
         if instance.tipo_usuario == 'administrador':
