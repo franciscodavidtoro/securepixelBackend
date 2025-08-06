@@ -41,9 +41,10 @@ class UsuarioListAPIView(APIView):
         usuario=request.user # type: Usuario
         
         if usuario.tipo_usuario =="Administrador" or usuario.is_superuser:
-            serializer = UsuarioSerializer()
-            usuarios = serializer.getUsuarios()
-            return Response(usuarios, status=status.HTTP_200_OK)
+            
+            usuarios = Usuario.objects.all()
+            serializer = UsuarioSerializer(usuarios, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         elif usuario.tipo_usuario =="Profesor":
             serializer = UsuarioSerializer()
             usuarios = serializer.getUsuariosProfesor(usuario)
