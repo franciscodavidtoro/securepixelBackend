@@ -30,7 +30,7 @@ def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_
     """
 
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": "Eres un generador experto de respuestas para preguntas de opción múltiple. Ajusta el nivel de dificultad de las respuestas generadas según el valor numérico."},
             {"role": "user", "content": prompt}

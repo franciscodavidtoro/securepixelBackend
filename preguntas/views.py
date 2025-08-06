@@ -9,6 +9,24 @@ from ensennanza.models import Tema
 import random
 
 
+from rest_framework.generics import RetrieveAPIView, ListAPIView
+
+
+class ListarPruebasAPIView(ListAPIView):#listar todas las pruebas de un usuario
+    serializer_class = PruebaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        usuario = self.request.user
+        return Prueba.objects.filter(estudiante=usuario).order_by('-fecha')
+    
+class PruebaDetalleAPIView(RetrieveAPIView):
+    queryset = Prueba.objects.all()
+    serializer_class = PruebaSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
 class CrearPruebaAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
