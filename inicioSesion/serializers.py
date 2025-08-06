@@ -32,7 +32,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     
     def getUsuarios(self):
         usuarios = Usuario.objects.all()
-        return [{'id': usuario.id, 'username': usuario.username, 'email': usuario.email, 'tipo_usuario': usuario.tipo_usuario} for usuario in usuarios]
+        return [{'id': usuario.id, 'username': usuario.username, 'email': usuario.email, 'tipo_usuario': usuario.tipo_usuario,'curso':usuario.curso} for usuario in usuarios]
     
     def getUsuariosProfesor(self, instance: Usuario):
         # Obtener usuarios tipo 'alumno' cuyo curso tenga como profesor al 'instance'
