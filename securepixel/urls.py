@@ -16,9 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-import inicioSesion.urls 
-import ensennanza.urls
-import preguntas.urls
 from django.conf import settings
 from django.conf.urls.static import static
 urlpatterns = [
@@ -26,6 +23,7 @@ urlpatterns = [
     path('api/usuarios/', include('inicioSesion.urls')),
     path('api/ensennanza/', include('ensennanza.urls')),
     path('api/preguntas/', include('preguntas.urls')),
+    path('api/ia/', include('AI.urls')),
     
     path('markdownx/', include('markdownx.urls')),
     
