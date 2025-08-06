@@ -24,11 +24,8 @@ class Usuario(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.tipo_usuario})"
     
-    def clean(self):
-        super().clean()
+
         
-        # Si NO es alumno, Curso debe ser null
-        if self.tipo_usuario != 'alumno' and self.curso is not None:
-            raise ValidationError({'Curso': 'Solo los alumnos pueden tener curso asignado.'})
+            
 
     

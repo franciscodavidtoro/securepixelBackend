@@ -15,6 +15,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
     
     def update(self, instance: Usuario, validated_data):
+        if 'curso' not in validated_data or validated_data.get('curso') is None:
+            instance.curso = None
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
     
