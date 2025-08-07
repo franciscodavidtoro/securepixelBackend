@@ -1,7 +1,7 @@
 import openai
 from openai import OpenAI
 
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="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")
 
 def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_existentes, instrucciones_ia):
   
@@ -29,7 +29,7 @@ def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_
     {instrucciones}
 
     La dificultad es {dificultad}, así que ajusta la sutileza o claridad de los distractores y respuestas correctas según ese nivel.
-    Devuelve una respuesta por línea, en el mismo orden. Solo texto, sin numeración ni comentarios.
+    Devuelve una respuesta por línea, en el mismo orden. Solo texto, sin numeración ni comentarios ni marcas de corecto o incorecto.
     """
 
     response = client.chat.completions.create(
