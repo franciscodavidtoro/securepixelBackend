@@ -31,9 +31,7 @@ class CrearPruebaAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        
-        
-        
+
         tema_id = request.data.get("tema_id")
          # Validación básica
         if not tema_id:
@@ -47,17 +45,18 @@ class CrearPruebaAPIView(APIView):
 
         # Buscar pruebas anteriores del usuario en este tema
         pruebas_anteriores = Prueba.objects.filter(estudiante=request.user).order_by('-fecha') 
-
-        if not pruebas_anteriores.exists():
-            dificultad = tema.dificultad_minima
+        ultima_prueba = pruebas_anteriores.first() 
+        if not pruebas_anteriores.exists() or ultima_prueba.realizada == False:
+            dificultad = tema.curso.dificultadMinima
         else:
-            ultima_prueba = pruebas_anteriores.first() # type: Prueba
-            if ultima_prueba.nota > 18:
+            # type: Prueba
+            if ultima_prueba.calificacion > 18:
                 dificultad = min(ultima_prueba.dificultad + 1, tema.curso.dificultadMaxima)
-            if ultima_prueba.nota < 14:
+            if ultima_prueba.calificacion < 14:
                 dificultad = max(ultima_prueba.dificultad - 1, tema.curso.dificultadMinima)
             else:
                 dificultad = ultima_prueba.dificultad
+
 
         prueba = Prueba.objects.create(
             tema_id=tema_id,
@@ -82,8 +81,10 @@ class RealizarPruebaAPIView(APIView):
         respuestas_usuario = request.data.get("respuestas")  # {pregunta_id: respuesta_id}
         calificacion = 0
         total = 0
-
-        for pregunta_id, respuesta_id in respuestas_usuario.items():
+        print(respuestas_usuario)
+        for r_data in respuestas_usuario:
+            pregunta_id = r_data['pregunta_id']
+            respuesta_id = r_data['respuesta_id']
             try:
                 r = respuesta.objects.get(id=respuesta_id, preguntaCorespondiente_id=pregunta_id)
                 if r.corecta:
@@ -91,6 +92,7 @@ class RealizarPruebaAPIView(APIView):
                 total += 1
             except respuesta.DoesNotExist:
                 continue
+
 
         if total > 0:
             nota_final = (calificacion / total) * 20
@@ -103,5 +105,7 @@ class RealizarPruebaAPIView(APIView):
 
         return Response({
             "mensaje": "Prueba finalizada.",
-            "calificacion": nota_final
+            "calificacion": nota_final,
+            "aprobado ": nota_final >= 14,
+            "respuestas_correctas": calificacion,
         }, status=200)

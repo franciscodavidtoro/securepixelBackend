@@ -1,8 +1,11 @@
 import openai
+from openai import OpenAI
+
+client = OpenAI(api_key="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")
 
 def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_existentes, instrucciones_ia):
   
-    openai.api_key = "TU_API_KEY"
+    
 
     contexto = "\n".join([
         f"- {r['texto']} [{'✔' if r['corecta'] else '✖'}]"
@@ -29,7 +32,7 @@ def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_
     Devuelve una respuesta por línea, en el mismo orden. Solo texto, sin numeración ni comentarios.
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": "Eres un generador experto de respuestas para preguntas de opción múltiple. Ajusta el nivel de dificultad de las respuestas generadas según el valor numérico."},
@@ -37,5 +40,5 @@ def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_
         ]
     )
 
-    texto = response['choices'][0]['message']['content']
+    texto = response.choices[0].message.content
     return [line.strip("- ").strip() for line in texto.splitlines() if line.strip()]
