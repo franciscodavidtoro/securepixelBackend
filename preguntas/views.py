@@ -106,6 +106,6 @@ class RealizarPruebaAPIView(APIView):
         return Response({
             "mensaje": "Prueba finalizada.",
             "calificacion": nota_final,
-            "aprobado ": nota_final >= 14,
+            "aprobado": nota_final >= 14,
             "respuestas_correctas": calificacion,
         }, status=200)
