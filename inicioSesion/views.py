@@ -77,10 +77,10 @@ class UsuariosUpdateAPIView(APIView):
 class UsuarioCambContrasennaAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def put(self, request,pk):
+    def put(self, request, pk):
         usuario_autenticado = request.user  # type: Usuario
         nueva_contrasena = request.data.get('nueva_contrasena')
-        id_usuario_objetivo =pk
+        id_usuario_objetivo = pk
 
         if not nueva_contrasena:
             return Response({'detail': 'Debe proporcionar una nueva contraseña.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -91,7 +91,8 @@ class UsuarioCambContrasennaAPIView(APIView):
 
         # Verificamos si es el mismo usuario que quiere cambiar su propia contraseña
         if usuario_autenticado.pk == int(id_usuario_objetivo):
-            self.update_user_password(usuario_autenticado, nueva_contrasena)
+            usuario_autenticado.set_password(nueva_contrasena)
+            usuario_autenticado.save()
             return Response({'message': 'Contraseña actualizada correctamente.'})
 
         # Si no es el mismo usuario pero es Administrador, puede cambiar contraseñas de otros
@@ -101,7 +102,8 @@ class UsuarioCambContrasennaAPIView(APIView):
             except Usuario.DoesNotExist:
                 return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
-            self.update_admin_password(usuario_objetivo, nueva_contrasena)
+            usuario_objetivo.set_password(nueva_contrasena)
+            usuario_objetivo.save()
             return Response({'message': 'Contraseña de otro usuario actualizada correctamente.'})
 
         # Si no es el mismo usuario y no es administrador, no tiene permiso
