@@ -6,7 +6,7 @@ from django.shortcuts import render
 from .serializers import AtencionSerializer, EmocionesSerializer
 from .models import atencion, emociones
 
-
+from preguntas.models import Prueba
 
 
 
@@ -40,8 +40,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 class ProcesarImgEmocionesAPIView(APIView):
+    """Procesa imágenes para detectar emociones y guarda los resultados en la base de datos.
+    """     
     @torch.no_grad()
-    def post(self, request):
+    def post(self, request, pk):
         base64_image = request.data.get("image")
         if not base64_image:
             return Response({"error": "No se recibió imagen"}, status=400)
@@ -54,25 +56,47 @@ class ProcesarImgEmocionesAPIView(APIView):
         except Exception:
             return Response({"error": "Imagen inválida"}, status=400)
 
-        # Preprocesar y predecir
-        inputs = processor(images=image, return_tensors="pt").to(device)
+        # Preprocesar imagen
+        try:
+            inputs = processor(images=image, return_tensors="pt").to(device)
+        except Exception:
+            return Response({"error": "No se pudo procesar la imagen"}, status=400)
+
+        # Obtener predicciones
         outputs = model(**inputs)
+        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+        confidence, predicted_class_idx = torch.max(probs, dim=-1)
+        confidence = confidence.item()
+        predicted_emotion = model.config.id2label[predicted_class_idx.item()]
 
-        # Obtener emoción más probable
-        predicted_class_idx = outputs.logits.argmax(-1).item()
-        predicted_emotion = model.config.id2label[predicted_class_idx]
+        # Si la confianza es muy baja, se considera que no se detectó emoción clara
+        if confidence < 0.15:
+            return Response({"error": "No se detectó una emoción con suficiente confianza"}, status=200)
 
-        # Obtener probabilidades
-        probabilities = F.softmax(outputs.logits, dim=-1)[0]
-        emociones = {
-            model.config.id2label[idx]: float(prob * 100)
-            for idx, prob in enumerate(probabilities)
-        }
-        emociones_ordenadas = sorted(emociones.items(), key=lambda x: x[1], reverse=True)
+        # Guardar en DB
+        prueva= Prueba.objects.filter(id=pk).first()
+        if not prueva:
+            return Response({"error": "Prueba no encontrada"}, status=404)
+        
+        emocionDB = emociones.objects.get_or_create(prueba=prueva, defaults={
+            'emociones': {},
+            'emocionPredominante': None,
+            'numImgProsesadas': 0,
+            })[0]
+        JSON_emociones = emocionDB.emociones or {}
+        JSON_emociones[predicted_emotion] = JSON_emociones.get(predicted_emotion, 0) + 1
+        emocionDB.emociones = JSON_emociones
+
+        # Obtener la emoción predominante
+        mayor_valor = max(JSON_emociones.values())
+        emocion_predominante = [key for key, value in JSON_emociones.items() if value == mayor_valor]
+        emocionDB.emocionPredominante = emocion_predominante[0] if emocion_predominante else None
+        emocionDB.numImgProsesadas += 1
+        emocionDB.save()
 
         return Response({
             "emocion_predicha": predicted_emotion,
-            "emociones": emociones_ordenadas
+            "confianza": round(confidence, 3)
         })
 
         
