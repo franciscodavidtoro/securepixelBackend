@@ -185,4 +185,44 @@ class ReporteEmocionesEstudiantesAPIView(APIView):
             "emociones_porcentaje": emociones_porcentaje,
             "promedios_calificaciones": promedios_calificaciones
         })
+        
+        
+class ReporteAtencionEstudiantesAPIView(APIView):
+    """devuelve atencion y emociones de 1 estudiante"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            usuario = Usuario.objects.get(pk=pk)
+        except Usuario.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=404)
+
+        atencion_estudiante = atencion.objects.filter(Usuario=usuario)
+        emociones_estudiante = emociones.objects.filter(prueba__usuario=usuario)
+
+        if not atencion_estudiante.exists() and not emociones_estudiante.exists():
+            return Response({"error": "No hay datos de atención o emociones para este estudiante"}, status=404)
+
+        atencion_data = []
+        for atencion_item in atencion_estudiante:
+            atencion_data.append({
+                "tema": atencion_item.tema.nombre if atencion_item.tema else None,
+                "fecha": atencion_item.fecha,
+                "vectorOjosCerados": atencion_item.vectorOjosCerados,
+                "vectorAnguloCabeza": atencion_item.vectorAnguloCabeza,
+                "tiempoLectura": atencion_item.tiempoLectura
+            })
+
+        emociones_data = []
+        for emocion_item in emociones_estudiante:
+            emociones_data.append({
+                "emociones": emocion_item.emociones,
+                "emocionPredominante": emocion_item.emocionPredominante,
+                "numImgProsesadas": emocion_item.numImgProsesadas
+            })
+
+        return Response({
+            "atencion": atencion_data,
+            "emociones": emociones_data
+        })
     
