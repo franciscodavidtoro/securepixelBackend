@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/ensennanza/', include('ensennanza.urls')),
     path('api/preguntas/', include('preguntas.urls')),
     path('api/ia/', include('AI.urls')),
+    path('api/estadisticas/', include('estadisticas.urls')),
     
     path('markdownx/', include('markdownx.urls')),
     

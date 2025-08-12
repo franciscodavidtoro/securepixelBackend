@@ -11,7 +11,7 @@ from .views import (
 urlpatterns = [
     path('admin-dashboard', AdminDasboardEstadisticasAPIView.as_view(), name='admin-dashboard-estadisticas'),
     path('reporte-estadisticas-generales', ReporteEstadisticasGeneralesAPIView.as_view(), name='reporte-estadisticas-generales'),
-    path('reporte-atencion-estudiantes', ReporteAtencionEstudiantesAPIView.as_view(), name='reporte-atencion-estudiantes'),
-    path('reporte-emociones-estudiantes', ReporteEmocionesEstudiantesAPIView.as_view(), name='reporte-emociones-estudiantes'),
+    path('reporte-atencion-estudiantes/<int:pk>', ReporteAtencionEstudiantesAPIView.as_view(), name='reporte-atencion-estudiantes'),
+    path('reporte-emociones-estudiante', ReporteEmocionesEstudiantesAPIView.as_view(), name='reporte-emociones-estudiantes'),
     path('profesor-dashboard', ProfesorDasboardEstadisticasAPIView.as_view(), name='profesor-dashboard-estadisticas')
 ]   

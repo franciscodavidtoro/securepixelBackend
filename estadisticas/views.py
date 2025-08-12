@@ -5,11 +5,13 @@ from AI.models import atencion, emociones
 from ensennanza.models import Curso
 from rest_framework.permissions import IsAuthenticated
 from typing import List
-
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
-
+import psutil
+import os
+import datetime
 
 class AdminDasboardEstadisticasAPIView(APIView):
     """Vista para obtener estadísticas del dashboard de administración.
@@ -32,13 +34,27 @@ class AdminDasboardEstadisticasAPIView(APIView):
         # Calcular la nota promedio de las pruebas
         notas = Prueba.objects.filter(realizada=True).values_list('calificacion', flat=True)
         nota_promedio = sum(notas) / len(notas) if notas else 0
+        
+        #limitar el promedio a 2 decimales
+        nota_promedio = round(nota_promedio, 2)
 
         # Obtener el número de cursos
         n_cursos = Curso.objects.count()
 
         # Calcular el uptime (diferencia entre ahora y la fecha de creación del primer usuario)
-        primer_usuario = Usuario.objects.order_by('fecha_creacion').first()
-        uptime = timezone.now() - primer_usuario.fecha_creacion if primer_usuario else timezone.timedelta(0)
+        proceso = psutil.Process(os.getpid())
+
+        # Fecha y hora en que se inició el proceso
+        fecha_inicio = datetime.datetime.fromtimestamp(proceso.create_time())
+
+        # Diferencia entre ahora y la hora de inicio
+        uptime = datetime.datetime.now() - fecha_inicio
+        #uptime en  minutos
+        uptime = uptime - datetime.timedelta(microseconds=uptime.microseconds)
+        uptime = uptime - datetime.timedelta(seconds=uptime.seconds % 60)
+        uptime = uptime - datetime.timedelta(minutes=uptime.seconds // 60)
+        uptime = uptime - datetime.timedelta(hours=uptime.seconds // 3600)
+        
 
         return Response({
             "n_usuarios": n_usuarios,
@@ -46,7 +62,7 @@ class AdminDasboardEstadisticasAPIView(APIView):
             "n_pruebas_no_completadas": n_pruebas_no_completadas,
             "nota_promedio": nota_promedio,
             "n_cursos": n_cursos,
-            "uptime": uptime.total_seconds()
+            "uptime": uptime
         })
         
         
@@ -61,12 +77,12 @@ class ProfesorDasboardEstadisticasAPIView(APIView):
 
     """
     
-    permission_classes = [isAuthenticated]
+    permission_classes = [IsAuthenticated]
     
     def get(self, request, *args, **kwargs):
         usuario = request.user  # type: Usuario
         if usuario.tipo_usuario != "Profesor":
-            return Response({'error': 'No tiene permisos'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': 'No tiene permisos'}, status= 403)
         # Obtener el número de estudiantes del profesor
         cursos = Curso.objects.filter(profesor=usuario)
         estudiantes = Usuario.objects.filter(curso__in=cursos, tipo_usuario='alumno')
@@ -104,7 +120,7 @@ class ReporteEstadisticasGeneralesAPIView(APIView):
     del:total,filtrado por curso,profesor"""
     permission_classes = [IsAuthenticated]
 
-    def estadisicas(usuarios: List[Usuario]) -> dict:
+    def estadisicas(self,usuarios: List[Usuario]) -> dict:
         """saca las estadisticas de la lista de usuarios"""
         n_estudiantes = len(usuarios)
         promedios = []
@@ -117,7 +133,7 @@ class ReporteEstadisticasGeneralesAPIView(APIView):
                 calificaciones = [prueba.calificacion for prueba in pruebas]
                 promedios.append(sum(calificaciones) / len(calificaciones))
                 n_lecciones += pruebas.filter(repetible=True).count()
-            iaEnsenanza = atencion.objects.filter(usuario=usuario)
+            iaEnsenanza = atencion.objects.filter(Usuario=usuario)
             if iaEnsenanza.exists():
                 tiempos_estudio.extend([ia.tiempoLectura for ia in iaEnsenanza])
 
@@ -140,7 +156,7 @@ class ReporteEstadisticasGeneralesAPIView(APIView):
         estadisticasPorCurso = {}
         for curso in todosCursos:
             estudiantesCurso = Usuario.objects.filter(curso=curso, tipo_usuario='alumno')
-            estadisticasPorCurso[curso.nombre] = self.estadisicas(estudiantesCurso)
+            estadisticasPorCurso[curso.nombreCurso] = self.estadisicas(estudiantesCurso)
         estadisticasPorProfesor = {}
         for profesor in profesores:
             cursosProfesor = Curso.objects.filter(profesor=profesor)
@@ -148,7 +164,7 @@ class ReporteEstadisticasGeneralesAPIView(APIView):
             for curso in cursosProfesor:
                 estudiantesCurso = Usuario.objects.filter(curso=curso, tipo_usuario='alumno')
                 estudiantesProfesor.extend(estudiantesCurso)
-            estadisticasPorProfesor[profesor.nombre] = self.estadisicas(estudiantesProfesor)
+            estadisticasPorProfesor[profesor.username] = self.estadisicas(estudiantesProfesor)
         return Response({
             "estadisticas_globale": estadisticasGlovales,
             "estadisticas_por_curso": estadisticasPorCurso,
@@ -198,7 +214,7 @@ class ReporteAtencionEstudiantesAPIView(APIView):
             return Response({"error": "Usuario no encontrado"}, status=404)
 
         atencion_estudiante = atencion.objects.filter(Usuario=usuario)
-        emociones_estudiante = emociones.objects.filter(prueba__usuario=usuario)
+        emociones_estudiante = emociones.objects.filter(prueba__estudiante=usuario)
 
         if not atencion_estudiante.exists() and not emociones_estudiante.exists():
             return Response({"error": "No hay datos de atención o emociones para este estudiante"}, status=404)
@@ -206,7 +222,7 @@ class ReporteAtencionEstudiantesAPIView(APIView):
         atencion_data = []
         for atencion_item in atencion_estudiante:
             atencion_data.append({
-                "tema": atencion_item.tema.nombre if atencion_item.tema else None,
+                "tema": atencion_item.tema.titulo if atencion_item.tema else None,
                 "fecha": atencion_item.fecha,
                 "vectorOjosCerados": atencion_item.vectorOjosCerados,
                 "vectorAnguloCabeza": atencion_item.vectorAnguloCabeza,
