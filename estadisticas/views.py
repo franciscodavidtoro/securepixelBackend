@@ -4,7 +4,7 @@ from preguntas.models import Prueba
 from AI.models import atencion, emociones
 from ensennanza.models import Curso
 from rest_framework.permissions import IsAuthenticated
-
+from typing import List
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -95,3 +95,94 @@ class ProfesorDasboardEstadisticasAPIView(APIView):
 
 
 
+class ReporteEstadisticasGeneralesAPIView(APIView):
+    """ Las estadisticas de 
+    n de estudiantes
+    promedios
+    n de leciones repetidas
+    tiempos promedio de estudio 
+    del:total,filtrado por curso,profesor"""
+    permission_classes = [IsAuthenticated]
+
+    def estadisicas(usuarios: List[Usuario]) -> dict:
+        """saca las estadisticas de la lista de usuarios"""
+        n_estudiantes = len(usuarios)
+        promedios = []
+        n_lecciones = 0
+        tiempos_estudio = []
+
+        for usuario in usuarios:
+            pruebas = Prueba.objects.filter(estudiante=usuario)
+            if pruebas.exists():
+                calificaciones = [prueba.calificacion for prueba in pruebas]
+                promedios.append(sum(calificaciones) / len(calificaciones))
+                n_lecciones += pruebas.filter(repetible=True).count()
+            iaEnsenanza = atencion.objects.filter(usuario=usuario)
+            if iaEnsenanza.exists():
+                tiempos_estudio.extend([ia.tiempoLectura for ia in iaEnsenanza])
+
+        promedio_general = sum(promedios) / len(promedios) if promedios else 0
+        tiempo_promedio_estudio = sum(tiempos_estudio) / len(tiempos_estudio) if tiempos_estudio else 0
+
+        return {
+            "n_estudiantes": n_estudiantes,
+            "promedio_general": promedio_general,
+            "n_lecciones": n_lecciones,
+            "tiempo_promedio_estudio": tiempo_promedio_estudio
+        }
+
+    def get(self, request, *args, **kwargs):
+        todosEstudiantes = Usuario.objects.filter(tipo_usuario='alumno')
+        profesores= Usuario.objects.filter(tipo_usuario='profesor')
+        todosCursos = Curso.objects.all()
+        
+        estadisticasGlovales = self.estadisicas(todosEstudiantes)
+        estadisticasPorCurso = {}
+        for curso in todosCursos:
+            estudiantesCurso = Usuario.objects.filter(curso=curso, tipo_usuario='alumno')
+            estadisticasPorCurso[curso.nombre] = self.estadisicas(estudiantesCurso)
+        estadisticasPorProfesor = {}
+        for profesor in profesores:
+            cursosProfesor = Curso.objects.filter(profesor=profesor)
+            estudiantesProfesor=[]
+            for curso in cursosProfesor:
+                estudiantesCurso = Usuario.objects.filter(curso=curso, tipo_usuario='alumno')
+                estudiantesProfesor.extend(estudiantesCurso)
+            estadisticasPorProfesor[profesor.nombre] = self.estadisicas(estudiantesProfesor)
+        return Response({
+            "estadisticas_globale": estadisticasGlovales,
+            "estadisticas_por_curso": estadisticasPorCurso,
+            "estadisticas_por_profesor": estadisticasPorProfesor
+        })
+        
+class ReporteEmocionesEstudiantesAPIView(APIView):
+    """Reporte de emociones de los estudiantes obteniendo porcentaje de emociones y los promedios de las pruevas."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        emociones_estudiantes = emociones.objects.all()
+        if not emociones_estudiantes.exists():
+            return Response({"error": "No hay emociones registradas"}, status=404)
+        emociones_totales = {}
+        for emocion in emociones_estudiantes:
+            emociones_totales[emocion.emocionPredominante] = emociones_totales.get(emocion.emocionPredominante, 0) + 1
+            
+        total_emociones = sum(emociones_totales.values())
+        emociones_porcentaje = {emocion: (cantidad / total_emociones) * 100 for emocion, cantidad in emociones_totales.items()}
+        
+        # Calcular el promedio de calificaciones dependiendo de la emoción predominante
+        promedios_calificaciones = {}
+        for key, value in emociones_porcentaje.items():
+            EmocionesPorEmocion = emociones.objects.filter(emocionPredominante=key)
+            if EmocionesPorEmocion.exists():
+                calificaciones = Prueba.objects.filter(emociones__in=EmocionesPorEmocion).values_list('calificacion', flat=True)
+                if calificaciones:
+                    promedios_calificaciones[key] = sum(calificaciones) / len(calificaciones)
+                else:
+                    promedios_calificaciones[key] = 0
+        
+        return Response({
+            "emociones_porcentaje": emociones_porcentaje,
+            "promedios_calificaciones": promedios_calificaciones
+        })
+    
