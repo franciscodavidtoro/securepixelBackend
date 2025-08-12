@@ -13,6 +13,9 @@ import psutil
 import os
 import datetime
 
+
+from django.db.models import OuterRef, Subquery
+
 class AdminDasboardEstadisticasAPIView(APIView):
     """Vista para obtener estadísticas del dashboard de administración.
     n_usuarios 
@@ -81,21 +84,28 @@ class ProfesorDasboardEstadisticasAPIView(APIView):
     
     def get(self, request, *args, **kwargs):
         usuario = request.user  # type: Usuario
-        if usuario.tipo_usuario != "Profesor":
-            return Response({'error': 'No tiene permisos'}, status= 403)
+        
         # Obtener el número de estudiantes del profesor
         cursos = Curso.objects.filter(profesor=usuario)
         estudiantes = Usuario.objects.filter(curso__in=cursos, tipo_usuario='alumno')
         # Obtener el número de pruebas completadas y no completadas por los estudiantes del profesor
-        n_pruebas_completadas = Prueba.objects.filter(realizada=True, usuario__in=estudiantes).count()
-        n_pruebas_no_completadas = Prueba.objects.filter(realizada=False, usuario__in=estudiantes).count()
+        n_pruebas_completadas = Prueba.objects.filter(realizada=True, estudiante__in=estudiantes).count()
+        n_pruebas_no_completadas = Prueba.objects.filter(realizada=False, estudiante__in=estudiantes).count()
         # Obtener la última prueba de cada estudiante
-        ultima_pruebas = Prueba.objects.filter(usuario__in=estudiantes).order_by('-fecha_creacion').distinct('usuario')
+        # Subconsulta: la última prueba del estudiante actual
+        ultima_prueba_subquery = Prueba.objects.filter(
+            estudiante=OuterRef('estudiante')
+        ).order_by('-fecha')  # más reciente primero
+
+        # Consulta principal: solo los registros que coinciden con la subconsulta
+        ultimas_pruebas = Prueba.objects.filter(
+            id=Subquery(ultima_prueba_subquery.values('id')[:1])
+        )
         # Calcular el número de estudiantes que reprobaron la última prueba 
-        n_estudiantes_reprobaron = sum(1 for prueba in ultima_pruebas if prueba.calificacion < 14)
+        n_estudiantes_reprobaron = sum(1 for prueba in ultimas_pruebas if prueba.calificacion < 14)  
         
         # Calcular la nota promedio de las pruebas de los estudiantes del profesor
-        notas = Prueba.objects.filter(realizada=True, usuario__in=estudiantes).values_list('calificacion', flat=True)
+        notas = Prueba.objects.filter(realizada=True, estudiante__in=estudiantes).values_list('calificacion', flat=True)
         nota_promedio = sum(notas) / len(notas) if notas else 0
         # Obtener el número de cursos del profesor
         n_cursos = cursos.count()
