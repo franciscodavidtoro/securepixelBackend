@@ -18,7 +18,12 @@ from rest_framework.permissions import IsAuthenticated
 class RegistroUsuarioAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = UsuarioSerializer(data=request.data)
+        
         if serializer.is_valid():
+            if not Usuario.objects.exists():
+                serializer.validated_data['is_staff'] = True
+                serializer.validated_data['is_superuser'] = True
+                serializer.validated_data['tipo_usuario'] = 'administrador'
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
             return Response({'token': token.key}, status=status.HTTP_201_CREATED)
