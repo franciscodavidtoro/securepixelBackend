@@ -1,8 +1,13 @@
-import openai
+import os
 from openai import OpenAI
 
-client = OpenAI(api_key="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")
+api_key = os.getenv("OPENAI_API_KEY")
 
+if not api_key:
+    print("La variable de entorno OPENAI_API_KEY no está configurada.")
+    api_key = "tu_clave_api_aqui"  
+
+client = OpenAI(api_key=api_key)
 def completar_respuestas_ia_con_contexto(pregunta_texto, dificultad, respuestas_existentes, instrucciones_ia):
   
     
