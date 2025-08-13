@@ -7,6 +7,7 @@ from .serializers import PruebaSerializer, PruebaConPreguntasSerializer
 from inicioSesion.models import Usuario
 from ensennanza.models import Tema
 import random
+from AI.models import emociones
 
 
 from rest_framework.generics import RetrieveAPIView, ListAPIView
@@ -57,12 +58,18 @@ class CrearPruebaAPIView(APIView):
             else:
                 dificultad = ultima_prueba.dificultad
 
-
+        # verificar si el usuario ya tiene una prueba en curso
+        if Prueba.objects.filter(estudiante=request.user, realizada=False, tema_id=tema_id).exists():
+            return Response(PruebaSerializer(Prueba.objects.get(estudiante=request.user, realizada=False, tema_id=tema_id)).data, status=200)
+        
         prueba = Prueba.objects.create(
             tema_id=tema_id,
             dificultad=dificultad,
             estudiante=request.user
         )
+        
+        emo = emociones.objects.create(prueba=prueba, emociones={})
+        emo.save()
 
         return Response(PruebaSerializer(prueba).data, status=201)
 
