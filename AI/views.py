@@ -1,27 +1,47 @@
 from django.shortcuts import render
-
-# Create your views here.
-
-
 from .serializers import AtencionSerializer, EmocionesSerializer
 from .models import atencion, emociones
-
 from preguntas.models import Prueba
-
-
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
 from transformers import AutoImageProcessor, AutoModelForImageClassification
-import torch.nn.functional as F
 import torch
 from PIL import Image
 from io import BytesIO
 import base64
+import os
 
+# ===== CONFIGURACIÓN IA =====
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MODEL_DIR = "/tmp/emotion_model"
 
+# Descargar y cargar el modelo solo una vez por ciclo de vida del dyno
+def load_emotion_model():
+    global processor, model
+    if not os.path.exists(MODEL_DIR):
+        print("📥 Descargando modelo de Hugging Face...")
+        processor = AutoImageProcessor.from_pretrained(
+            "dima806/facial_emotions_image_detection",
+            cache_dir=MODEL_DIR
+        )
+        model = AutoModelForImageClassification.from_pretrained(
+            "dima806/facial_emotions_image_detection",
+            cache_dir=MODEL_DIR
+        )
+    else:
+        print("✅ Cargando modelo desde cache temporal...")
+        processor = AutoImageProcessor.from_pretrained(MODEL_DIR)
+        model = AutoModelForImageClassification.from_pretrained(MODEL_DIR)
 
+    model.eval()
+    model.to(device)
 
+# Cargar modelo al iniciar el servidor
+load_emotion_model()
+
+# ===== VISTAS =====
 class AtencionAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = AtencionSerializer(data=request.data)
@@ -29,19 +49,10 @@ class AtencionAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
-    
 
-
-# Precarga
-processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection")
-model = AutoModelForImageClassification.from_pretrained("dima806/facial_emotions_image_detection")
-model.eval()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
 
 class ProcesarImgEmocionesAPIView(APIView):
-    """Procesa imágenes para detectar emociones y guarda los resultados en la base de datos.
-    """     
+    """Procesa imágenes para detectar emociones y guarda los resultados en la base de datos."""
     @torch.no_grad()
     def post(self, request, pk):
         base64_image = request.data.get("image")
@@ -50,7 +61,7 @@ class ProcesarImgEmocionesAPIView(APIView):
 
         # Decodificar imagen base64
         try:
-            format, imgstr = base64_image.split(';base64,')
+            _, imgstr = base64_image.split(';base64,')
             image_bytes = base64.b64decode(imgstr)
             image = Image.open(BytesIO(image_bytes)).convert("RGB")
         except Exception:
@@ -69,25 +80,26 @@ class ProcesarImgEmocionesAPIView(APIView):
         confidence = confidence.item()
         predicted_emotion = model.config.id2label[predicted_class_idx.item()]
 
-        # Si la confianza es muy baja, se considera que no se detectó emoción clara
+        # Si la confianza es muy baja
         if confidence < 0.15:
             return Response({"error": "No se detectó una emoción con suficiente confianza"}, status=200)
 
         # Guardar en DB
-        prueva= Prueba.objects.filter(id=pk).first()
-        if not prueva:
+        prueba = Prueba.objects.filter(id=pk).first()
+        if not prueba:
             return Response({"error": "Prueba no encontrada"}, status=404)
-        
-        emocionDB = emociones.objects.get_or_create(prueba=prueva, defaults={
+
+        emocionDB = emociones.objects.get_or_create(prueba=prueba, defaults={
             'emociones': {},
             'emocionPredominante': None,
             'numImgProsesadas': 0,
-            })[0]
+        })[0]
+
         JSON_emociones = emocionDB.emociones or {}
         JSON_emociones[predicted_emotion] = JSON_emociones.get(predicted_emotion, 0) + 1
         emocionDB.emociones = JSON_emociones
 
-        # Obtener la emoción predominante
+        # Obtener emoción predominante
         mayor_valor = max(JSON_emociones.values())
         emocion_predominante = [key for key, value in JSON_emociones.items() if value == mayor_valor]
         emocionDB.emocionPredominante = emocion_predominante[0] if emocion_predominante else None
@@ -98,5 +110,3 @@ class ProcesarImgEmocionesAPIView(APIView):
             "emocion_predicha": predicted_emotion,
             "confianza": round(confidence, 3)
         })
-
-        
